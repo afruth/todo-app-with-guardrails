@@ -1,0 +1,33 @@
+{
+  "name": "todo-app-with-guardrails",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Todo app built with strict TypeScript + ESLint + Husky guardrails (Metycle workshop exercise).",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --max-warnings=0 --no-warn-ignored"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "eslint": "^9.18.0",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.3.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0"
+  }
+}
