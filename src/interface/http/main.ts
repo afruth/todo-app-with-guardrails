@@ -20,7 +20,7 @@ import { JoseTokenSigner } from '../../infrastructure/token-signer.js';
 import { AppModule } from './app.module.js';
 import { DomainErrorFilter } from './domain-error.filter.js';
 
-const DEFAULT_PORT = 3000;
+const DEFAULT_PORT = 5600;
 const DEFAULT_DB_PATH = './data.sqlite';
 const DEFAULT_SECRET = 'change-me-in-prod-please-do-not-use-this';
 
