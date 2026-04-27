@@ -6,3 +6,10 @@ build/
 .env
 .env.local
 coverage/
+
+# Runtime artifacts (do not commit)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+uploads/
+.playwright-mcp/

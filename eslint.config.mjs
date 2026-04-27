@@ -8,7 +8,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.config.*', 'jest.config.ts'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'web/**', 'drizzle/**', '*.config.*', 'jest.config.ts'],
   },
 
   js.configs.recommended,
@@ -72,11 +72,12 @@ export default tseslint.config(
 
   // Allow a slightly looser config for tests (longer files, more statements).
   {
-    files: ['**/*.test.ts', '**/*.spec.ts'],
+    files: ['**/*.test.ts', '**/*.spec.ts', 'tests/doubles/**'],
     rules: {
       'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': 'off',
       'max-statements': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
     },
   }
 );
