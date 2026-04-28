@@ -66,6 +66,7 @@ const API_BASE = '/api';
 export const TAGS_CHANGED_EVENT = 'todo-app:tags-changed';
 export const PROJECTS_CHANGED_EVENT = 'todo-app:projects-changed';
 export const ORGS_CHANGED_EVENT = 'todo-app:orgs-changed';
+export const TODOS_CHANGED_EVENT = 'todo-app:todos-changed';
 
 const dispatchEvent = (name: string): void => {
   window.dispatchEvent(new CustomEvent(name));
@@ -227,6 +228,7 @@ export const api = {
       body: JSON.stringify(input),
     });
     dispatchEvent(TAGS_CHANGED_EVENT);
+    dispatchEvent(TODOS_CHANGED_EVENT);
     return result;
   },
   updateTodo: async (
@@ -243,15 +245,21 @@ export const api = {
       body: JSON.stringify(input),
     });
     dispatchEvent(TAGS_CHANGED_EVENT);
+    dispatchEvent(TODOS_CHANGED_EVENT);
     return result;
   },
-  moveTodo: (id: string, projectId: string) =>
-    request<TodoView>(`/todos/${id}/move`, {
+  moveTodo: async (id: string, projectId: string) => {
+    const result = await request<TodoView>(`/todos/${id}/move`, {
       method: 'PATCH',
       body: JSON.stringify({ projectId }),
-    }),
-  deleteTodo: (id: string) =>
-    request<void>(`/todos/${id}`, { method: 'DELETE' }),
+    });
+    dispatchEvent(TODOS_CHANGED_EVENT);
+    return result;
+  },
+  deleteTodo: async (id: string) => {
+    await request<void>(`/todos/${id}`, { method: 'DELETE' });
+    dispatchEvent(TODOS_CHANGED_EVENT);
+  },
   listTags: (orgId: string) =>
     request<TagView[]>(`/organizations/${orgId}/tags`),
   todosForTag: (orgId: string, name: string) =>
