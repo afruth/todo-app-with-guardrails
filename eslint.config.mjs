@@ -65,8 +65,11 @@ export default tseslint.config(
       'prefer-template': 'error',
       'object-shorthand': ['error', 'always'],
 
-      // ---- Things we tolerate (kept as warnings, very few) ------------------
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // ---- Logging discipline -----------------------------------------------
+      // Direct console.* is forbidden in production code. Use the Logger port
+      // (`application/ports/logger.ts`) and inject a concrete adapter (e.g.
+      // `WinstonLogger`) at the composition root in `interface/`.
+      'no-console': 'error',
     },
   },
 
