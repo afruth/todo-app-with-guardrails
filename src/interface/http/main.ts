@@ -25,7 +25,7 @@ const DEFAULT_DB_PATH = './data.sqlite';
 const DEFAULT_SECRET = 'change-me-in-prod-please-do-not-use-this';
 
 const bootstrap = async (): Promise<void> => {
-  const handle = openDatabase(process.env.DB_PATH ?? DEFAULT_DB_PATH);
+  const handle = openDatabase(process.env['DB_PATH'] ?? DEFAULT_DB_PATH);
   const uploadsDir = path.resolve(process.cwd(), 'uploads');
   await fs.mkdir(uploadsDir, { recursive: true });
   const app = await NestFactory.create<NestExpressApplication>(
@@ -38,7 +38,7 @@ const bootstrap = async (): Promise<void> => {
       tags: new DrizzleTagRepository(handle.db),
       todos: new DrizzleTodoRepository(handle.db),
       hasher: new BcryptPasswordHasher(),
-      tokens: new JoseTokenSigner(process.env.JWT_SECRET ?? DEFAULT_SECRET),
+      tokens: new JoseTokenSigner(process.env['JWT_SECRET'] ?? DEFAULT_SECRET),
       inviteTokens: new RandomTokenGenerator(),
       clock: new SystemClock(),
       ids: new UuidV7Generator(),
@@ -47,7 +47,7 @@ const bootstrap = async (): Promise<void> => {
   app.use(cookieParser());
   app.useGlobalFilters(new DomainErrorFilter());
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
-  const port = Number(process.env.PORT ?? DEFAULT_PORT);
+  const port = Number(process.env['PORT'] ?? DEFAULT_PORT);
   await app.listen(port);
   console.warn(`Backend listening on http://localhost:${String(port)}`);
 };
