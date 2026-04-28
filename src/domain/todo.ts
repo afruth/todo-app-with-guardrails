@@ -28,7 +28,7 @@ export const normalizeTitle = (raw: string): string => {
 };
 
 export const normalizeDeadline = (raw: string | null | undefined): string | null => {
-  if (raw === null || raw === undefined || raw === '') {
+  if (raw === undefined || raw === '') {
     return null;
   }
   const parsed = new Date(raw);
