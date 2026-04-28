@@ -39,6 +39,7 @@ import { SignUp } from '../../application/use-cases/sign-up.js';
 import { UpdateOrganization } from '../../application/use-cases/update-organization.js';
 import { UpdateTodo } from '../../application/use-cases/update-todo.js';
 import { AuthController } from './auth/auth.controller.js';
+import { HealthController } from './health/health.controller.js';
 import {
   InvitesPublicController,
   OrgInvitesController,
@@ -214,6 +215,7 @@ export class AppModule {
     return {
       module: AppModule,
       controllers: [
+        HealthController,
         AuthController,
         OrganizationsController,
         OrgProjectsController,

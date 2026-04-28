@@ -1,0 +1,13 @@
+# Copy this file to terraform.tfvars and fill in.
+# terraform.tfvars is gitignored.
+#
+# Generate jwt_secret with:
+#   openssl rand -base64 48
+#
+# IMPORTANT: staging and production MUST use different jwt_secret values.
+
+api_port  = 6600
+web_port  = 6601
+log_level = "info"
+
+jwt_secret = "REPLACE_ME_WITH_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS"

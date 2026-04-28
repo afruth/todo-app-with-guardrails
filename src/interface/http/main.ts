@@ -16,6 +16,7 @@ import { DrizzleUserRepository } from '../../infrastructure/db/user-repository.j
 import { UuidV7Generator } from '../../infrastructure/id-generator.js';
 import { BcryptPasswordHasher } from '../../infrastructure/password-hasher.js';
 import { RandomTokenGenerator } from '../../infrastructure/token-generator.js';
+import { WinstonLogger } from '../../infrastructure/logger.js';
 import { JoseTokenSigner } from '../../infrastructure/token-signer.js';
 import { AppModule } from './app.module.js';
 import { DomainErrorFilter } from './domain-error.filter.js';
@@ -23,6 +24,8 @@ import { DomainErrorFilter } from './domain-error.filter.js';
 const DEFAULT_PORT = 5600;
 const DEFAULT_DB_PATH = './data.sqlite';
 const DEFAULT_SECRET = 'change-me-in-prod-please-do-not-use-this';
+
+const logger = new WinstonLogger({ level: process.env['LOG_LEVEL'] ?? 'info' });
 
 const bootstrap = async (): Promise<void> => {
   const handle = openDatabase(process.env['DB_PATH'] ?? DEFAULT_DB_PATH);
@@ -49,10 +52,10 @@ const bootstrap = async (): Promise<void> => {
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
   const port = Number(process.env['PORT'] ?? DEFAULT_PORT);
   await app.listen(port);
-  console.warn(`Backend listening on http://localhost:${String(port)}`);
+  logger.info('Backend listening', { url: `http://localhost:${String(port)}` });
 };
 
 bootstrap().catch((err: unknown) => {
-  console.error(err);
+  logger.error('Backend failed to start', { error: err instanceof Error ? err.message : String(err) });
   process.exit(1);
 });
