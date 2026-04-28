@@ -6,10 +6,11 @@ import type {
   TodoRepository,
   TodoWithTags,
 } from '../../application/ports/todo-repository.js';
-import type { TagId, TodoId } from '../../domain/ids.js';
+import { asTodoId, type TagId, type TodoId } from '../../domain/ids.js';
 import type { Todo } from '../../domain/todo.js';
 import type { Db } from './database.js';
 import { projects } from './schema/projects.js';
+import { todoDependencies } from './schema/todo-dependencies.js';
 import { todoTags } from './schema/todo-tags.js';
 import { todos } from './schema/todos.js';
 import { hydrateTodos, type TodoRow } from './todo-row-mapper.js';
@@ -132,35 +133,47 @@ export class DrizzleTodoRepository implements TodoRepository {
     return hydrateTodos(this.db, rows);
   }
 
-  addDependency(dependentId: TodoId, prerequisiteId: TodoId): Promise<void> {
-    return Promise.reject(notYetImplemented('addDependency', [dependentId, prerequisiteId]));
+  async addDependency(
+    dependentId: TodoId,
+    prerequisiteId: TodoId,
+  ): Promise<void> {
+    await this.db
+      .insert(todoDependencies)
+      .values({ dependentId, prerequisiteId })
+      .onConflictDoNothing();
   }
 
-  removeDependency(
+  async removeDependency(
     dependentId: TodoId,
     prerequisiteId: TodoId,
   ): Promise<boolean> {
-    return Promise.reject(
-      notYetImplemented('removeDependency', [dependentId, prerequisiteId]),
-    );
+    const result = await this.db
+      .delete(todoDependencies)
+      .where(
+        and(
+          eq(todoDependencies.dependentId, dependentId),
+          eq(todoDependencies.prerequisiteId, prerequisiteId),
+        ),
+      );
+    return result.changes > 0;
   }
 
-  findPrerequisites(todoId: TodoId): Promise<readonly TodoId[]> {
-    return Promise.reject(notYetImplemented('findPrerequisites', [todoId]));
+  async findPrerequisites(todoId: TodoId): Promise<readonly TodoId[]> {
+    const rows = await this.db
+      .select({ prerequisiteId: todoDependencies.prerequisiteId })
+      .from(todoDependencies)
+      .where(eq(todoDependencies.dependentId, todoId));
+    return rows.map((row) => asTodoId(row.prerequisiteId));
   }
 
-  findDependents(todoId: TodoId): Promise<readonly TodoId[]> {
-    return Promise.reject(notYetImplemented('findDependents', [todoId]));
+  async findDependents(todoId: TodoId): Promise<readonly TodoId[]> {
+    const rows = await this.db
+      .select({ dependentId: todoDependencies.dependentId })
+      .from(todoDependencies)
+      .where(eq(todoDependencies.prerequisiteId, todoId));
+    return rows.map((row) => asTodoId(row.dependentId));
   }
 }
-
-const notYetImplemented = (
-  method: string,
-  args: readonly TodoId[],
-): Error =>
-  new Error(
-    `DrizzleTodoRepository.${method} not yet implemented (WP4): [${args.join(', ')}]`,
-  );
 
 const writeTagLinks = (
   tx: Parameters<Parameters<Db['transaction']>[0]>[0],
