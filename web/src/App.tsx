@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { AcceptInvitePage } from './pages/AcceptInvitePage';
 import { LoginPage } from './pages/LoginPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
+import { OverduePage } from './pages/OverduePage';
 import { ProjectPage } from './pages/ProjectPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { TagPage } from './pages/TagPage';
@@ -44,6 +45,7 @@ export const App = (): React.ReactElement => (
     >
       <Route index element={<TodosPage />} />
       <Route path="upcoming" element={<UpcomingPage />} />
+      <Route path="overdue" element={<OverduePage />} />
       <Route path="projects/:projectId" element={<ProjectPage />} />
       <Route path="tags/:name" element={<TagPage />} />
       <Route path="settings/organization" element={<OrganizationSettingsPage />} />

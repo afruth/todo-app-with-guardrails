@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, AlertTitle } from '@mui/material';
+import { Alert, AlertTitle, Link } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { TODOS_CHANGED_EVENT, api, type TodoView } from '../api';
 import { useOrg } from '../org/OrgContext';
 
@@ -58,8 +59,11 @@ export const OverdueBanner = (): React.ReactElement | null => {
   return (
     <Alert severity="warning" sx={{ mb: 2 }}>
       <AlertTitle>Heads up — {label}</AlertTitle>
-      You have open todos past their deadline. Review them in{' '}
-      <strong>Upcoming</strong> or your project lists.
+      You have open todos past their deadline.{' '}
+      <Link component={RouterLink} to="/overdue">
+        Review them
+      </Link>
+      .
     </Alert>
   );
 };

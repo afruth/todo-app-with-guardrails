@@ -203,6 +203,9 @@ export const Layout = (): React.ReactElement => {
           <ListItemButton component={RouterLink} to="/upcoming">
             <ListItemText primary="Upcoming" />
           </ListItemButton>
+          <ListItemButton component={RouterLink} to="/overdue">
+            <ListItemText primary="Overdue" />
+          </ListItemButton>
         </List>
         <Divider />
         <Typography variant="overline" sx={{ pl: 2, pt: 1, color: 'text.secondary' }}>
