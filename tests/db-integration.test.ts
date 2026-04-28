@@ -304,6 +304,22 @@ describe('todos repo', () => {
     expect(await repo.delete(asTodoId('t-1'))).toBe(false);
     expect(await repo.findById(asTodoId('t-1'))).toBeNull();
   });
+
+  it('exposes dependency stubs that defer real persistence to WP4', async () => {
+    const repo = new DrizzleTodoRepository(handle.db);
+    await expect(repo.findPrerequisites(asTodoId('t-x'))).rejects.toThrow(
+      /not yet implemented/,
+    );
+    await expect(repo.findDependents(asTodoId('t-x'))).rejects.toThrow(
+      /not yet implemented/,
+    );
+    await expect(
+      repo.addDependency(asTodoId('t-x'), asTodoId('t-y')),
+    ).rejects.toThrow(/not yet implemented/);
+    await expect(
+      repo.removeDependency(asTodoId('t-x'), asTodoId('t-y')),
+    ).rejects.toThrow(/not yet implemented/);
+  });
 });
 
 const LEGACY_DDL = [

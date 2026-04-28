@@ -1,4 +1,5 @@
 import type {
+  DependencySummary,
   ListByTagArgs,
   ListTodosArgs,
   ListUpcomingArgs,
@@ -22,6 +23,7 @@ interface Stored {
 
 export class InMemoryTodoRepository implements TodoRepository {
   private readonly items = new Map<TodoId, Stored>();
+  private readonly edges = new Map<TodoId, Set<TodoId>>();
 
   constructor(
     private readonly projects: InMemoryProjectRepository,
@@ -38,7 +40,54 @@ export class InMemoryTodoRepository implements TodoRepository {
   }
 
   delete(id: TodoId): Promise<boolean> {
-    return Promise.resolve(this.items.delete(id));
+    const removed = this.items.delete(id);
+    this.edges.delete(id);
+    for (const prerequisites of this.edges.values()) {
+      prerequisites.delete(id);
+    }
+    return Promise.resolve(removed);
+  }
+
+  addDependency(
+    dependentId: TodoId,
+    prerequisiteId: TodoId,
+  ): Promise<void> {
+    let prerequisites = this.edges.get(dependentId);
+    if (prerequisites === undefined) {
+      prerequisites = new Set<TodoId>();
+      this.edges.set(dependentId, prerequisites);
+    }
+    prerequisites.add(prerequisiteId);
+    return Promise.resolve();
+  }
+
+  removeDependency(
+    dependentId: TodoId,
+    prerequisiteId: TodoId,
+  ): Promise<boolean> {
+    const prerequisites = this.edges.get(dependentId);
+    if (prerequisites === undefined) {
+      return Promise.resolve(false);
+    }
+    return Promise.resolve(prerequisites.delete(prerequisiteId));
+  }
+
+  findPrerequisites(todoId: TodoId): Promise<readonly TodoId[]> {
+    const prerequisites = this.edges.get(todoId);
+    if (prerequisites === undefined) {
+      return Promise.resolve([]);
+    }
+    return Promise.resolve([...prerequisites]);
+  }
+
+  findDependents(todoId: TodoId): Promise<readonly TodoId[]> {
+    const out: TodoId[] = [];
+    for (const [dependentId, prerequisites] of this.edges.entries()) {
+      if (prerequisites.has(todoId)) {
+        out.push(dependentId);
+      }
+    }
+    return Promise.resolve(out);
   }
 
   async findById(id: TodoId): Promise<TodoWithTags | null> {
@@ -99,6 +148,7 @@ export class InMemoryTodoRepository implements TodoRepository {
         tagNames.push(tag.name);
       }
     }
+    const dependencies = this.collectDependencies(stored.todo.id);
     return {
       ...stored.todo,
       organizationId: project === null
@@ -106,7 +156,29 @@ export class InMemoryTodoRepository implements TodoRepository {
         : project.organizationId,
       tagIds: stored.tagIds,
       tagNames,
+      dependencies,
+      hasOpenPrerequisites: dependencies.some((d) => !d.isCompleted),
     };
+  }
+
+  private collectDependencies(todoId: TodoId): readonly DependencySummary[] {
+    const prerequisites = this.edges.get(todoId);
+    if (prerequisites === undefined) {
+      return [];
+    }
+    const out: DependencySummary[] = [];
+    for (const prerequisiteId of prerequisites) {
+      const prerequisite = this.items.get(prerequisiteId);
+      if (prerequisite === undefined) {
+        continue;
+      }
+      out.push({
+        id: prerequisite.todo.id,
+        title: prerequisite.todo.title,
+        isCompleted: prerequisite.todo.isCompleted,
+      });
+    }
+    return out;
   }
 
   private async hydrateAll(stored: readonly Stored[]): Promise<readonly TodoWithTags[]> {
