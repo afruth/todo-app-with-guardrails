@@ -6,6 +6,7 @@ import { organizationMembers } from './schema/organization-members.js';
 import { organizations } from './schema/organizations.js';
 import { projects } from './schema/projects.js';
 import { tags } from './schema/tags.js';
+import { todoDependencies } from './schema/todo-dependencies.js';
 import { todoTags } from './schema/todo-tags.js';
 import { todos } from './schema/todos.js';
 import { users } from './schema/users.js';
@@ -19,6 +20,7 @@ export const schema = {
   todos,
   tags,
   todoTags,
+  todoDependencies,
 } as const;
 
 export type Db = BetterSQLite3Database<typeof schema>;
@@ -102,6 +104,13 @@ const SCHEMA_STATEMENTS: readonly string[] = [
     PRIMARY KEY (todo_id, tag_id)
   )`,
   `CREATE INDEX IF NOT EXISTS idx_todo_tags_tag ON todo_tags(tag_id)`,
+  `CREATE TABLE IF NOT EXISTS todo_dependencies (
+    dependent_id TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+    prerequisite_id TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+    PRIMARY KEY (dependent_id, prerequisite_id),
+    CONSTRAINT todo_dependencies_no_self_ref CHECK (dependent_id <> prerequisite_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_todo_deps_prerequisite ON todo_dependencies(prerequisite_id)`,
 ];
 
 export const openDatabase = (filename: string): DbHandle => {
