@@ -307,8 +307,12 @@ describe('todos repo', () => {
 
   it('exposes dependency stubs that defer real persistence to WP4', async () => {
     const repo = new DrizzleTodoRepository(handle.db);
-    expect(await repo.findPrerequisites(asTodoId('t-x'))).toEqual([]);
-    expect(await repo.findDependents(asTodoId('t-x'))).toEqual([]);
+    await expect(repo.findPrerequisites(asTodoId('t-x'))).rejects.toThrow(
+      /not yet implemented/,
+    );
+    await expect(repo.findDependents(asTodoId('t-x'))).rejects.toThrow(
+      /not yet implemented/,
+    );
     await expect(
       repo.addDependency(asTodoId('t-x'), asTodoId('t-y')),
     ).rejects.toThrow(/not yet implemented/);

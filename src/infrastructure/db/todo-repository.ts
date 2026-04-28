@@ -133,7 +133,7 @@ export class DrizzleTodoRepository implements TodoRepository {
   }
 
   addDependency(dependentId: TodoId, prerequisiteId: TodoId): Promise<void> {
-    return Promise.reject(notYetImplemented('addDependency', dependentId, prerequisiteId));
+    return Promise.reject(notYetImplemented('addDependency', [dependentId, prerequisiteId]));
   }
 
   removeDependency(
@@ -141,26 +141,25 @@ export class DrizzleTodoRepository implements TodoRepository {
     prerequisiteId: TodoId,
   ): Promise<boolean> {
     return Promise.reject(
-      notYetImplemented('removeDependency', dependentId, prerequisiteId),
+      notYetImplemented('removeDependency', [dependentId, prerequisiteId]),
     );
   }
 
-  findPrerequisites(_todoId: TodoId): Promise<readonly TodoId[]> {
-    return Promise.resolve([]);
+  findPrerequisites(todoId: TodoId): Promise<readonly TodoId[]> {
+    return Promise.reject(notYetImplemented('findPrerequisites', [todoId]));
   }
 
-  findDependents(_todoId: TodoId): Promise<readonly TodoId[]> {
-    return Promise.resolve([]);
+  findDependents(todoId: TodoId): Promise<readonly TodoId[]> {
+    return Promise.reject(notYetImplemented('findDependents', [todoId]));
   }
 }
 
 const notYetImplemented = (
   method: string,
-  dependentId: TodoId,
-  prerequisiteId: TodoId,
+  args: readonly TodoId[],
 ): Error =>
   new Error(
-    `DrizzleTodoRepository.${method} not yet implemented (WP4): ${dependentId} → ${prerequisiteId}`,
+    `DrizzleTodoRepository.${method} not yet implemented (WP4): [${args.join(', ')}]`,
   );
 
 const writeTagLinks = (
