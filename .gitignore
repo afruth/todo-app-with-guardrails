@@ -13,3 +13,4 @@ coverage/
 *.sqlite-wal
 uploads/
 .playwright-mcp/
+.local/
