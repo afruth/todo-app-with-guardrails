@@ -36,6 +36,7 @@ import {
 } from '../api';
 import { useAuth } from '../auth/AuthContext';
 import { useOrg } from '../org/OrgContext';
+import { OverdueBanner } from './OverdueBanner';
 
 const DRAWER_WIDTH = 260;
 
@@ -247,6 +248,7 @@ export const Layout = (): React.ReactElement => {
         </Box>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+        <OverdueBanner />
         <Outlet />
       </Box>
     </Box>
