@@ -6,10 +6,18 @@ import type {
 } from '../../domain/ids.js';
 import type { Todo } from '../../domain/todo.js';
 
+export interface DependencySummary {
+  readonly id: TodoId;
+  readonly title: string;
+  readonly isCompleted: boolean;
+}
+
 export interface TodoWithTags extends Todo {
   readonly organizationId: OrganizationId;
   readonly tagIds: readonly TagId[];
   readonly tagNames: readonly string[];
+  readonly dependencies: readonly DependencySummary[];
+  readonly hasOpenPrerequisites: boolean;
 }
 
 export interface ListUpcomingArgs {
@@ -36,4 +44,11 @@ export interface TodoRepository {
   list(args: ListTodosArgs): Promise<readonly TodoWithTags[]>;
   listUpcoming(args: ListUpcomingArgs): Promise<readonly TodoWithTags[]>;
   listByTag(args: ListByTagArgs): Promise<readonly TodoWithTags[]>;
+  addDependency(dependentId: TodoId, prerequisiteId: TodoId): Promise<void>;
+  removeDependency(
+    dependentId: TodoId,
+    prerequisiteId: TodoId,
+  ): Promise<boolean>;
+  findPrerequisites(todoId: TodoId): Promise<readonly TodoId[]>;
+  findDependents(todoId: TodoId): Promise<readonly TodoId[]>;
 }

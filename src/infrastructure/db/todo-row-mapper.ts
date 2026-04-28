@@ -63,6 +63,8 @@ const buildOne = (row: TodoRow, agg: AggregatedTags | undefined): TodoWithTags =
     updatedAt: row.updatedAt,
     tagIds: tagIds.map(asTagId),
     tagNames,
+    dependencies: [],
+    hasOpenPrerequisites: false,
   };
 };
 

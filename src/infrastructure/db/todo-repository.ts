@@ -131,7 +131,37 @@ export class DrizzleTodoRepository implements TodoRepository {
       .orderBy(asc(todos.createdAt));
     return hydrateTodos(this.db, rows);
   }
+
+  addDependency(dependentId: TodoId, prerequisiteId: TodoId): Promise<void> {
+    return Promise.reject(notYetImplemented('addDependency', dependentId, prerequisiteId));
+  }
+
+  removeDependency(
+    dependentId: TodoId,
+    prerequisiteId: TodoId,
+  ): Promise<boolean> {
+    return Promise.reject(
+      notYetImplemented('removeDependency', dependentId, prerequisiteId),
+    );
+  }
+
+  findPrerequisites(_todoId: TodoId): Promise<readonly TodoId[]> {
+    return Promise.resolve([]);
+  }
+
+  findDependents(_todoId: TodoId): Promise<readonly TodoId[]> {
+    return Promise.resolve([]);
+  }
 }
+
+const notYetImplemented = (
+  method: string,
+  dependentId: TodoId,
+  prerequisiteId: TodoId,
+): Error =>
+  new Error(
+    `DrizzleTodoRepository.${method} not yet implemented (WP4): ${dependentId} → ${prerequisiteId}`,
+  );
 
 const writeTagLinks = (
   tx: Parameters<Parameters<Db['transaction']>[0]>[0],
