@@ -305,20 +305,128 @@ describe('todos repo', () => {
     expect(await repo.findById(asTodoId('t-1'))).toBeNull();
   });
 
-  it('exposes dependency stubs that defer real persistence to WP4', async () => {
+});
+
+describe('todo dependencies repo', () => {
+  const seedThreeTodos = async (): Promise<DrizzleTodoRepository> => {
+    await seedUser(handle);
+    await seedOrgWithOwner(handle);
+    const projectRepo = new DrizzleProjectRepository(handle.db);
+    await projectRepo.insert({
+      id: asProjectId('p-1'),
+      organizationId: asOrganizationId('o-1'),
+      name: 'Inbox',
+      createdAt: SAMPLE_ISO,
+      updatedAt: SAMPLE_ISO,
+    });
     const repo = new DrizzleTodoRepository(handle.db);
-    await expect(repo.findPrerequisites(asTodoId('t-x'))).rejects.toThrow(
-      /not yet implemented/,
+    const baseTodo = {
+      isCompleted: false,
+      projectId: asProjectId('p-1'),
+      createdByUserId: asUserId('u-1'),
+      deadlineAt: null,
+      updatedAt: SAMPLE_ISO,
+    } as const;
+    await repo.insert(
+      { ...baseTodo, id: asTodoId('t-a'), title: 'A', createdAt: SAMPLE_ISO },
+      [],
     );
-    await expect(repo.findDependents(asTodoId('t-x'))).rejects.toThrow(
-      /not yet implemented/,
+    await repo.insert(
+      {
+        ...baseTodo,
+        id: asTodoId('t-b'),
+        title: 'B',
+        createdAt: '2026-04-26T00:00:01.000Z',
+      },
+      [],
     );
+    await repo.insert(
+      {
+        ...baseTodo,
+        id: asTodoId('t-c'),
+        title: 'C',
+        createdAt: '2026-04-26T00:00:02.000Z',
+      },
+      [],
+    );
+    return repo;
+  };
+
+  it('round-trips, lists prerequisites/dependents, hydrates, is idempotent', async () => {
+    const repo = await seedThreeTodos();
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-a'));
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-b'));
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-a')); // idempotent
+    expect([...(await repo.findPrerequisites(asTodoId('t-c')))].sort()).toEqual(
+      ['t-a', 't-b'],
+    );
+    expect(await repo.findDependents(asTodoId('t-a'))).toEqual(['t-c']);
+    const hydrated = await repo.findById(asTodoId('t-c'));
+    expect(hydrated?.dependencies.map((d) => d.id)).toEqual(['t-a', 't-b']);
+    expect(hydrated?.hasOpenPrerequisites).toBe(true);
+    const list = await repo.list({ organizationId: asOrganizationId('o-1') });
+    const c = list.find((t) => t.id === 't-c');
+    expect(c?.dependencies.map((d) => d.title)).toEqual(['A', 'B']);
+    expect(c?.hasOpenPrerequisites).toBe(true);
+    const a = list.find((t) => t.id === 't-a');
+    expect(a?.hasOpenPrerequisites).toBe(false);
+  });
+
+  it('clears hasOpenPrerequisites once every prerequisite is completed', async () => {
+    const repo = await seedThreeTodos();
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-a'));
+    await repo.update(
+      {
+        id: asTodoId('t-a'),
+        projectId: asProjectId('p-1'),
+        title: 'A',
+        isCompleted: true,
+        deadlineAt: null,
+        createdByUserId: asUserId('u-1'),
+        createdAt: SAMPLE_ISO,
+        updatedAt: '2026-04-27T00:00:00.000Z',
+      },
+      [],
+    );
+    const c = await repo.findById(asTodoId('t-c'));
+    expect(c?.hasOpenPrerequisites).toBe(false);
+    expect(c?.dependencies[0]?.isCompleted).toBe(true);
+  });
+
+  it('removeDependency reports whether an edge existed', async () => {
+    const repo = await seedThreeTodos();
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-a'));
+    expect(
+      await repo.removeDependency(asTodoId('t-c'), asTodoId('t-a')),
+    ).toBe(true);
+    expect(
+      await repo.removeDependency(asTodoId('t-c'), asTodoId('t-a')),
+    ).toBe(false);
+    expect(await repo.findPrerequisites(asTodoId('t-c'))).toEqual([]);
+  });
+
+  it('cascades: deleting a prerequisite removes the edge', async () => {
+    const repo = await seedThreeTodos();
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-a'));
+    await repo.delete(asTodoId('t-a'));
+    expect(await repo.findPrerequisites(asTodoId('t-c'))).toEqual([]);
+    const c = await repo.findById(asTodoId('t-c'));
+    expect(c?.dependencies).toEqual([]);
+    expect(c?.hasOpenPrerequisites).toBe(false);
+  });
+
+  it('cascades: deleting a dependent removes the edge', async () => {
+    const repo = await seedThreeTodos();
+    await repo.addDependency(asTodoId('t-c'), asTodoId('t-a'));
+    await repo.delete(asTodoId('t-c'));
+    expect(await repo.findDependents(asTodoId('t-a'))).toEqual([]);
+  });
+
+  it('rejects self-dependency at the DB layer (CHECK constraint)', async () => {
+    const repo = await seedThreeTodos();
     await expect(
-      repo.addDependency(asTodoId('t-x'), asTodoId('t-y')),
-    ).rejects.toThrow(/not yet implemented/);
-    await expect(
-      repo.removeDependency(asTodoId('t-x'), asTodoId('t-y')),
-    ).rejects.toThrow(/not yet implemented/);
+      repo.addDependency(asTodoId('t-a'), asTodoId('t-a')),
+    ).rejects.toThrow();
   });
 });
 
